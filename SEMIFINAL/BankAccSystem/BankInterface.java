@@ -21,8 +21,13 @@ public class BankInterface {
         
         System.out.print("Enter Bank Account Name: ");
         String accountName = in.nextLine();
-        System.out.print("Enter Intitial Balance: ");
+        System.out.print("Enter Inititial Balance: ");
         double balance = in.nextDouble();
+
+        while (balance < 0) {
+            System.out.print("\nCan't initialize negative amount...\nEnter Initial Balance: ");
+            balance = in.nextDouble();
+        }
 
         BankAccount newAccount = new BankAccount(accountID, accountName, balance);
         
@@ -40,6 +45,12 @@ public class BankInterface {
                 case 1:
                     System.out.print("Enter Amount: ");
                     double depositAmount = in.nextDouble();
+
+                    while (depositAmount < 0) {
+                        System.out.print("\nCan't deposit negative amount...\nEnter Amount: ");
+                        depositAmount = in.nextDouble();
+                    }
+
                     deposited += depositAmount;
                     newAccount.deposit(depositAmount);
                 break;
@@ -48,10 +59,12 @@ public class BankInterface {
                     System.out.print("Enter Amount: ");
                     double withdrawAmount = in.nextDouble();
 
-                    if (withdrawAmount <= newAccount.getBalance()) {
-                        withdrawn += withdrawAmount;
+                    while (withdrawAmount < 0 || withdrawAmount > newAccount.getBalance()) {
+                        System.out.print("\nInvalid withdraw amount...\nEnter Amount: ");
+                        withdrawAmount = in.nextDouble();
                     }
 
+                    withdrawn += withdrawAmount;
                     newAccount.withdraw(withdrawAmount);
                 break;
 
