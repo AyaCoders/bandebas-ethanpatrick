@@ -12,149 +12,117 @@ import java.util.Queue;
 import java.util.Scanner;
 import java.util.Stack;
 
-public class Calculator {
-    static int simplify(char operator, Stack<Integer> numbers) {
-        int res = 0;
-        int pop1 = 0;
-        int pop2 = 0;
+class Calculator {
+    // Check if operator
+    static boolean isOperator(char token) {
+        return "+-*/".contains(Character.toString(token));
+    }
 
-        if (numbers.size() >= 2) {
-            pop1 = numbers.pop();
-            pop2 = numbers.pop();
+    static boolean isParenthesis(char token) {
+        return "()".contains(Character.toString(token));
+    }
+
+    static int precedence(char operator) {
+        if (operator == '+' || operator == '-') {
+            return 1;
+        } else if (operator == '*' || operator == '/') {
+            return 2;
         }
+        return 0;
+    }
 
-        switch (operator) {
+    static double evaluator(double num1, double num2, char op) {
+        switch (op) {
             case '+':
-                res = pop2 + pop1;
-                break;
-            case '/':
-                res = pop2 / pop1;
-                break;
-            case '*':
-                res = pop2 * pop1;
-                break;
+                return num1 + num2;
             case '-':
-                res = pop2 - pop1;
-                break;
+                return num1 - num2;
+            case '*':
+                return num1 * num2;
+            case '/':
+                return num1 / num2;
+            default:
+                return 0;
         }
-        return res;
     }
 
-    static void evaluatePostFix(String postFixString) {
-        Stack<Integer> numbers = new Stack<>();
-        String operator = "/+-*";
+    static double evaluateExp(Queue<String> operands) {
+        Stack<Double> stack = new Stack<>();
 
-        for (int i = 0; i < postFixString.length(); i++) {
-            char currentChar = postFixString.charAt(i);
-            if (Character.isDigit(currentChar)) {
-                numbers.push(Character.getNumericValue(currentChar));
-            } else if (operator.contains(Character.toString(currentChar))) {
-                numbers.push(simplify(currentChar, numbers));
+        while (!operands.isEmpty()) {
+            String token = operands.poll();
+
+            if (token.length() == 1 && isOperator(token.charAt(0)) && stack.size() >= 2) {
+                double num2 = stack.pop();
+                double num1 = stack.pop();
+                double result = evaluator(num1, num2, token.charAt(0));
+                stack.push(result);
+            } else {
+                double operand = Double.parseDouble(token);
+                stack.push(operand);
             }
         }
-        // Output Result
-        int res = numbers.pop();
-        numbers.clear();
-        System.out.println("\nResult: " + res);
+
+        return stack.pop();
     }
 
-    // Function to process each character index in the expression
-    static void processCharacter(char token, Queue<Character> postFix, Stack<Character> operators) {
-        String opTable = "/*+-";
+    static void toPostFix(String equation) {
+        Stack<Character> operators = new Stack<>();
+        Queue<String> operands = new LinkedList<>();
 
-        System.out.println("\nCurrent Character: " + token);
+        System.out.println("Equation: " + equation);
 
-        if (Character.isDigit(token)) {
-            postFix.add(token);
-            return;
-        } else if (opTable.contains(Character.toString(token))) {
-            if (operators.isEmpty()) {
-                operators.push(token);
-                return;
-            }
+        for (int i = 0; i < equation.length(); i++) {
+            char current = equation.charAt(i);
 
-            char top = operators.peek();
-            System.out.println("Peeked: " + top);
-            // If same precedence then put it in operands 
-            if ((top == '/' && token == '*') || (top == '*' && token == '/')
-                || (top == '+' && token == '-') || (top == '-' && token == '+')
-                || (top == token)) {
-                while (!operators.isEmpty()) {
-                    if (top == '(') {
-                        operators.pop(); // Remove '('
-                        break;
-                    }
+            if (Character.isDigit(current) || current == '.') { // operand character
+                StringBuilder digit = new StringBuilder();
 
-                    char ch = operators.pop();
-                    postFix.add(ch);
-
-                    // Check first before peek
-                    if (!operators.isEmpty()) {
-                        top = operators.peek();
-                    }
+                while (i < equation.length() && (Character.isDigit(equation.charAt(i) ) || equation.charAt(i) == '.')) {
+                    digit.append(equation.charAt(i));
+                    i++;
                 }
 
-                operators.push(token);
+                i--;
+                operands.add(digit.toString());
+            } else if (isOperator(current)) { // operator character
+                if (operators.isEmpty() || operators.peek() == '(') {
+                    operators.push(current);
+                } else {
+                    while (!operators.isEmpty() && precedence(operators.peek()) >= precedence(current)) {
+                        operands.add(Character.toString(operators.pop()));
+                    }
+                    operators.push(current);
+                }
+            } else if (isParenthesis(current)) {
+                if (current == '(') {
+                    operators.push(current);
+                } else if (current == ')') {
+                    while (!operators.isEmpty() && operators.peek() != '(') {
+                        operands.add(Character.toString(operators.pop()));
+                    }
 
-            } else if (top == '(') {
-                operators.push(token);
-            } else {
-                operators.push(token);
+                    if (!operators.isEmpty() && operators.peek() == '(') {
+                        operators.pop(); // Remove the opening parenthesis
+                    }
+                }
             }
-
-        } else if (token == '(') {
-            operators.push(token);
-        } else if (token == ')') { // if ')' is met then add top stack to postfix before '('
-            System.out.println("Removing Parenthesis");
-            while (operators.peek() != '(') {
-                char ch = operators.pop();
-                postFix.add(ch);
-            }
-            operators.pop(); // Remove '('
         }
-    }
 
-    // Function to convert expression from Infix to Postfix
-    static String toPostFix(String equation) {
-        Queue<Character> postFix = new LinkedList<>();
-        Stack<Character> operators = new Stack<>();
-        String res = "";
-        // Pass each character to the function to process
-        for (int i = 0; i < equation.length(); i++) {
-            processCharacter(equation.charAt(i), postFix, operators);
-            System.out.println("PostFix: " + postFix);
-            System.out.println("Operators: " + operators);
-        }
-        // After processing and operators is not empty, flush contents into
-        // postFix
         while (!operators.isEmpty()) {
-            char topOfOps = operators.pop();
-            postFix.offer(topOfOps);
-        }
-        // flush postFix to String
-        while (!postFix.isEmpty()) {
-            res += postFix.poll();
+            operands.add(Character.toString(operators.pop()));
         }
 
-        System.out.println("Postfix Form: " + res);
-        return res;
+        System.out.println("\nPostfix: " + operands);
+        System.out.println("Evaluate: " + evaluateExp(operands));
     }
 
     public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
-        char choice;
-        String equation;
 
-        do {
-            System.out.println("Enter expression: ");
-            equation = in.nextLine().replaceAll(" ", "");
+        System.out.println("Enter equation: ");
+        String equation = in.nextLine().replace(" ", "");
 
-            String postFixString = toPostFix(equation);
-            evaluatePostFix(postFixString);
-
-            System.out.print("\nEnter another expression?\nAnswer: ");
-            choice = in.next().charAt(0);
-            in.nextLine(); // flush input stream
-        } while (Character.toUpperCase(choice) == 'Y');
+        toPostFix(equation);
     }
 }
