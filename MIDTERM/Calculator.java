@@ -85,30 +85,36 @@ class Calculator {
 
                 i--;
                 operands.add(digit.toString());
+                System.out.println("\nCurrent: " + digit + "\nOperands: " + operands);
             } else if (isOperator(current)) { // operator character
                 if (operators.isEmpty() || operators.peek() == '(') {
                     operators.push(current);
                 } else {
                     while (!operators.isEmpty() && precedence(operators.peek()) >= precedence(current)) {
                         operands.add(Character.toString(operators.pop()));
+                        System.out.println("\nCurrent: "+ current +"\nOperands: " + operands + "\nOperators: " + operators);
                     }
                     operators.push(current);
                 }
+                System.out.println("\nCurrent: " + current + "\nOperators: " + operators);
             } else if (isParenthesis(current)) {
                 if (current == '(') {
                     operators.push(current);
                 } else if (current == ')') {
                     while (!operators.isEmpty() && operators.peek() != '(') {
                         operands.add(Character.toString(operators.pop()));
+                        System.out.println("\nCurrent: "+ current +"\nOperands: " + operands + "\nOperators: " + operators);
                     }
-
+                    
                     if (!operators.isEmpty() && operators.peek() == '(') {
                         operators.pop(); // Remove the opening parenthesis
                     }
                 }
+                System.out.println("\nCurrent: " + current + "\nOperators: " + operators);
             }
         }
-
+        
+        // If there is left in operators then add it in operands
         while (!operators.isEmpty()) {
             operands.add(Character.toString(operators.pop()));
         }
@@ -124,5 +130,7 @@ class Calculator {
         String equation = in.nextLine().replace(" ", "");
 
         toPostFix(equation);
+
+        in.close();
     }
 }
